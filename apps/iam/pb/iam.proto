@@ -1,0 +1,350 @@
+syntax = "proto3";
+
+package basic;
+
+import "google/protobuf/empty.proto";
+
+import "google/protobuf/timestamp.proto";
+
+import "google/protobuf/wrappers.proto";
+
+import "google/api/annotations.proto";
+
+import "common.proto";
+
+option go_package = "../pb";
+
+message AuthRequest {
+    string email = 1;
+    string passwd = 2;
+}
+message AuthResponse {
+    string token = 1;
+    int64 expire_time = 2;
+}
+
+message CheckAuthStatusRequest {
+    string token = 1;
+}
+message CheckAuthStatusResponse {
+    string org_code = 1;
+    string user_id = 2;
+    bool status = 3;
+}
+
+
+message ValidateAuthoritiesRequest {
+    string token = 1;
+    repeated string authorities = 2;
+}
+
+message ValidateAuthoritiesResponse {
+    map<string, bool> result = 1;
+}
+
+
+message Credential {
+    string id = 1;
+    string sk = 2;
+    google.protobuf.Timestamp ctime = 3;
+    google.protobuf.Timestamp mtime = 4;
+}
+
+
+message Group {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  google.protobuf.Timestamp ctime = 4;
+  google.protobuf.Timestamp mtime = 5;
+}
+
+message CreateGroupRequest {
+    string org_code = 1;
+    string group_code = 2;
+    string name = 3;
+}
+message UpdateGroupRequest {
+    string org_code = 1;
+    string id = 2;
+    optional string name = 3;
+    repeated string add_user_ids = 4;
+    repeated string remove_user_ids = 5;
+    repeated string add_authority_ids = 6;
+    repeated string remove_authority_ids = 7;
+}
+message ListGroupRequest {
+    google.protobuf.StringValue org_code = 1;
+    uint32 page_size = 2;
+    google.protobuf.StringValue page_token = 3;
+}
+message ListGroupResponse {
+  Pagination pagination = 1;
+  repeated Group items = 2;
+}
+
+message CreateAuthorityRequest {
+    string code = 1;
+    string name = 2;
+}
+message UpdateAuthorityRequest {
+  string id = 1;
+  optional string name = 2;
+}
+message Authority {
+    string id = 1;
+    string code = 2;
+    string name = 3;
+    google.protobuf.Timestamp ctime = 4;
+    google.protobuf.Timestamp mtime = 5;
+}
+
+message ListAuthorityRequest {
+    string org_code = 1;
+    google.protobuf.StringValue group_id = 2;
+    uint32 page_size = 3;
+    google.protobuf.StringValue page_token = 4;
+}
+
+message ListAuthorityResponse {
+    Pagination pagination = 1;
+    repeated Authority items = 2;
+}
+
+message Org {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  google.protobuf.Timestamp ctime = 4;
+  google.protobuf.Timestamp mtime = 5;
+}
+
+message CreateOrgRequest {
+  string code = 1;
+  string name = 2;
+}
+message UpdateOrgRequest {
+  string id = 1;
+  optional string name = 2;
+}
+message ListOrgRequest {
+  uint32 page_size = 1;
+  string page_token = 2;
+}
+message ListOrgResponse {
+  Pagination pagination = 1;
+  repeated Org items = 2;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  google.protobuf.Timestamp ctime = 4;
+  google.protobuf.Timestamp mtime = 5;
+}
+
+message CreateUserRequest {
+  string org_code = 1;
+  string name = 2;
+  string email = 3;
+}
+message UpdateUserRequest {
+  string org_code = 1;
+  string id = 2;
+  optional string name = 3;
+}
+message ListUserRequest {
+  google.protobuf.StringValue org_code = 1;
+  oneof model {
+    google.protobuf.StringValue group_id = 2;
+    google.protobuf.StringValue ns_id = 3;
+  }
+  uint32 page_size = 4;
+  google.protobuf.StringValue page_token = 5;
+}
+message ListUserResponse {
+  Pagination pagination = 1;
+  repeated User items = 2;
+}
+
+
+message Namespace {
+  string id = 1;
+  string code = 2;
+  string name = 3;
+  google.protobuf.Timestamp ctime = 4;
+  google.protobuf.Timestamp mtime = 5;
+}
+
+message CreateNamespaceRequest {
+  string org_code = 1;
+  string code = 2;
+  string name = 3;
+}
+message UpdateNamespaceRequest {
+  string org_code = 1;
+  string id = 2;
+  optional string name = 3;
+}
+message ListNamespaceRequest {
+  string org_code = 1;
+  uint32 page_size = 2;
+  string page_token = 3;
+}
+message ListNamespaceResponse {
+  Pagination pagination = 1;
+  repeated Namespace items = 2;
+}
+
+service IAMService {
+    rpc Auth ( AuthRequest ) returns ( AuthResponse ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/auth"
+        body: "*"
+      };
+    };
+
+    rpc CheckAuthStatus ( CheckAuthStatusRequest ) returns ( CheckAuthStatusResponse );
+
+    rpc ValidateAuthorities( ValidateAuthoritiesRequest) returns ( ValidateAuthoritiesResponse );
+
+    rpc CreateGroup( CreateGroupRequest ) returns ( Group ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/groups"
+        body: "*"
+      };
+    };
+
+    rpc UpdateGroup ( UpdateGroupRequest ) returns ( Group ){
+      option (google.api.http) = {
+        patch: "/apis/v1/services/iam/groups/{id}"
+        body: "*"
+      };
+    };
+
+    rpc GetGroup ( GetRequest ) returns ( Group ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/groups/{id}"
+      };
+    };
+
+    rpc ListGroup( ListGroupRequest ) returns ( ListGr ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/groups"
+      };
+    };
+
+    rpc CreateAuthority( CreateAuthorityRequest ) returns ( Authority ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/authorities"
+        body: "*"
+      };
+    };
+
+    rpc UpdateAuthority ( UpdateAuthorityRequest ) returns ( Authority ){
+      option (google.api.http) = {
+        patch: "/apis/v1/services/iam/authorities/{id}"
+        body: "*"
+      };
+    };
+
+    rpc GetAuthority ( GetRequest ) returns ( Authority ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/authorities/{id}"
+      };
+    };
+
+    rpc ListAuthority(ListAuthorityRequest) returns ( ListAuthorityResponse ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/authorities"
+        additional_bindings {
+          get: "/apis/v1/services/iam/groups/{group_id}/authorities"
+        }
+      };
+    };
+
+    rpc CreateOrg ( CreateOrgRequest ) returns ( Org ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/orgs"
+        body: "*"
+      };
+    };
+
+    rpc UpdateOrg ( UpdateOrgRequest ) returns ( Org ){
+      option (google.api.http) = {
+        patch: "/apis/v1/services/iam/orgs/{id}"
+        body: "*"
+      };
+    };
+
+    rpc GetOrg ( GetRequest ) returns ( Org ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/orgs/{id}"
+      };
+    };
+
+    rpc ListOrg( ListOrgRequest ) returns ( ListOrgResponse ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/orgs"
+      };
+    };
+
+    rpc CreateUser ( CreateUserRequest ) returns ( User ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/users"
+        body: "*"
+      };
+    };
+
+    rpc GetUser ( GetRequest ) returns ( User ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/users/{id}"
+      };
+    };
+
+    rpc UpdateUser ( UpdateUserRequest ) returns ( User ){
+      option (google.api.http) = {
+        patch: "/apis/v1/services/iam/users/{id}"
+        body: "*"
+      };
+    };
+
+    rpc ListUser( ListUserRequest ) returns ( ListUserResponse ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/users"
+        additional_bindings {
+          get: "/apis/v1/services/iam/groups/{group_id}/users"
+        }
+        additional_bindings {
+          get: "/apis/v1/services/iam/namespaces/{ns_id}/users"
+        }
+      };
+    };
+
+    rpc CreateNamespace ( CreateNamespaceRequest ) returns ( Namespace ){
+      option (google.api.http) = {
+        post: "/apis/v1/services/iam/namespaces"
+        body: "*"
+      };
+    };
+
+    rpc UpdateNamespace ( UpdateNamespaceRequest ) returns ( Namespace ){
+      option (google.api.http) = {
+        patch: "/apis/v1/services/iam/namespaces/{id}"
+        body: "*"
+      };
+    };
+
+    rpc GetNamespace ( GetRequest ) returns ( Namespace ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/namespaces/{id}"
+      };
+    };
+
+    rpc ListNamespace( ListNamespaceRequest) returns ( ListNamespaceResponse ){
+      option (google.api.http) = {
+        get: "/apis/v1/services/iam/namespaces"
+      };
+    };
+}

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package basic;
+
+import "google/protobuf/empty.proto";
+
+import "google/protobuf/timestamp.proto";
+
+import "google/protobuf/wrappers.proto";
+
+import "google/api/annotations.proto";
+
+option go_package = "../pb";
+
+message Pagination {
+    uint32 page_size = 1;
+    uint32 page_total = 2;
+    uint32 items_total = 3;
+    string next_page_token = 4;
+}
+
+message GetRequest{
+    string org_code = 1;
+    string id = 2;
+}
