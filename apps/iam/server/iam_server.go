@@ -18,6 +18,8 @@ type IAMServiceServer struct {
 }
 
 func (s *IAMServiceServer) Auth(ctx context.Context, req *pb.AuthRequest) (*pb.AuthResponse, error) {
+	panic("err")
+
 	token, expireTime, err := s.service.Auth(ctx, req.Email, req.Passwd)
 	if err != nil {
 		return nil, err

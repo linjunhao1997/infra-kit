@@ -58,7 +58,7 @@ func main() {
 	}
 
 	var opts = []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(RecoveryInterceptor),
+		grpc.ChainUnaryInterceptor(server.RecoveryUnaryServerInterceptor),
 	}
 	gsv := grpc.NewServer(opts...)
 	pb.RegisterIAMServiceServer(gsv, server.NewIAMServiceServer(service.NewIAMService(rdb, cache)))
