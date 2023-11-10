@@ -11,14 +11,11 @@ import (
 	"log"
 	"net"
 	"os"
-	"runtime/debug"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var (
@@ -79,15 +76,4 @@ func main() {
 	if err := gsv.Serve(lis); err != nil {
 		log.Fatalf("server ended: %s", err)
 	}
-}
-
-func RecoveryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	defer func() {
-		if e := recover(); e != nil {
-			debug.PrintStack()
-			err = status.Errorf(codes.Internal, "Panic err: %v", e)
-		}
-	}()
-
-	return handler(ctx, req)
 }

@@ -1,6 +1,8 @@
 package server
 
 import (
+	"runtime/debug"
+
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -16,6 +18,7 @@ var (
 func init() {
 	// Define customfunc to handle panic
 	customFunc := func(p any) (err error) {
+		debug.PrintStack()
 		return status.Errorf(codes.Unknown, "panic triggered: %v", p)
 	}
 	// Shared options for the logger, with a custom gRPC code to log level function.
