@@ -89,6 +89,7 @@ type IAMService interface {
 	CreateOrg(ctx context.Context, code, name string) (*ent.Org, error)
 	CreateNamespace(ctx context.Context, param CreateNamespaceParam) (*ent.Namespace, error)
 	GetAuthority(ctx context.Context, authorityId string, isOrgCode bool) (*ent.Authority, error)
+	GetGroup(ctx context.Context, groupId string) (*ent.Group, error)
 	GetOrg(ctx context.Context, orgId string) (*ent.Org, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
@@ -101,6 +102,10 @@ var _ IAMService = (*iamService)(nil)
 type iamService struct {
 	db    *ent.Client
 	cache *redislib.Redis
+}
+
+func (s *iamService) GetGroup(ctx context.Context, groupId string) (*ent.Group, error) {
+	return s.db.Group.Query().Where(group.ID(groupId)).Only(ctx)
 }
 
 func (s *iamService) ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error) {

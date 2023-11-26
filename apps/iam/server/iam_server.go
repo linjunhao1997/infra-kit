@@ -98,6 +98,20 @@ func (s *IAMServiceServer) GetAuthority(ctx context.Context, request *pb.GetRequ
 	}, nil
 }
 
+func (s *IAMServiceServer) GetGroup(ctx context.Context, request *pb.GetRequest) (*pb.Group, error) {
+	res, err := s.service.GetGroup(ctx, request.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Group{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
 func (s *IAMServiceServer) ListAuthority(ctx context.Context, request *pb.ListAuthorityRequest) (*pb.ListAuthorityResponse, error) {
 	var (
 		isOrgCode          bool
