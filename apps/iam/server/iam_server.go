@@ -98,17 +98,23 @@ func (s *IAMServiceServer) GetAuthority(ctx context.Context, request *pb.GetRequ
 	}, nil
 }
 
-func (s *IAMServiceServer) GetGroup(ctx context.Context, request *pb.GetRequest) (*pb.Group, error) {
-	res, err := s.service.GetGroup(ctx, request.Id)
+func (s *IAMServiceServer) GetGroup(ctx context.Context, request *pb.GetGroupRequest) (*pb.Group, error) {
+	res, err := s.service.GetGroup(ctx, request.Id, request.WithAuthorityIds)
 	if err != nil {
 		return nil, err
 	}
+
+	authorityIds := make([]string, 0, len(res.Edges.Authorities))
+	for _, e := range res.Edges.Authorities {
+		authorityIds = append(authorityIds, e.ID)
+	}
 	return &pb.Group{
-		Id:    res.ID,
-		Code:  res.Code,
-		Name:  res.Name,
-		Ctime: timestamppb.New(res.Ctime),
-		Mtime: timestamppb.New(res.Mtime),
+		Id:           res.ID,
+		Code:         res.Code,
+		Name:         res.Name,
+		Ctime:        timestamppb.New(res.Ctime),
+		Mtime:        timestamppb.New(res.Mtime),
+		AuthorityIds: authorityIds,
 	}, nil
 }
 
@@ -123,6 +129,9 @@ func (s *IAMServiceServer) ListAuthority(ctx context.Context, request *pb.ListAu
 	}
 	if request.GetPageToken() != nil {
 		pageToken = &request.GetPageToken().Value
+		if len(*pageToken) == 0 {
+			pageToken = nil
+		}
 	}
 	if request.GetGroupId() != nil {
 		groupId = &request.GetGroupId().Value

@@ -53,7 +53,7 @@ type IAMServiceClient interface {
 	ValidateAuthorities(ctx context.Context, in *ValidateAuthoritiesRequest, opts ...grpc.CallOption) (*ValidateAuthoritiesResponse, error)
 	CreateGroup(ctx context.Context, in *CreateGroupRequest, opts ...grpc.CallOption) (*Group, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupRequest, opts ...grpc.CallOption) (*Group, error)
-	GetGroup(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error)
+	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error)
 	ListGroup(ctx context.Context, in *ListGroupRequest, opts ...grpc.CallOption) (*ListGroupResponse, error)
 	CreateAuthority(ctx context.Context, in *CreateAuthorityRequest, opts ...grpc.CallOption) (*Authority, error)
 	UpdateAuthority(ctx context.Context, in *UpdateAuthorityRequest, opts ...grpc.CallOption) (*Authority, error)
@@ -126,7 +126,7 @@ func (c *iAMServiceClient) UpdateGroup(ctx context.Context, in *UpdateGroupReque
 	return out, nil
 }
 
-func (c *iAMServiceClient) GetGroup(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Group, error) {
+func (c *iAMServiceClient) GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*Group, error) {
 	out := new(Group)
 	err := c.cc.Invoke(ctx, IAMService_GetGroup_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -297,7 +297,7 @@ type IAMServiceServer interface {
 	ValidateAuthorities(context.Context, *ValidateAuthoritiesRequest) (*ValidateAuthoritiesResponse, error)
 	CreateGroup(context.Context, *CreateGroupRequest) (*Group, error)
 	UpdateGroup(context.Context, *UpdateGroupRequest) (*Group, error)
-	GetGroup(context.Context, *GetRequest) (*Group, error)
+	GetGroup(context.Context, *GetGroupRequest) (*Group, error)
 	ListGroup(context.Context, *ListGroupRequest) (*ListGroupResponse, error)
 	CreateAuthority(context.Context, *CreateAuthorityRequest) (*Authority, error)
 	UpdateAuthority(context.Context, *UpdateAuthorityRequest) (*Authority, error)
@@ -337,7 +337,7 @@ func (UnimplementedIAMServiceServer) CreateGroup(context.Context, *CreateGroupRe
 func (UnimplementedIAMServiceServer) UpdateGroup(context.Context, *UpdateGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroup not implemented")
 }
-func (UnimplementedIAMServiceServer) GetGroup(context.Context, *GetRequest) (*Group, error) {
+func (UnimplementedIAMServiceServer) GetGroup(context.Context, *GetGroupRequest) (*Group, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGroup not implemented")
 }
 func (UnimplementedIAMServiceServer) ListGroup(context.Context, *ListGroupRequest) (*ListGroupResponse, error) {
@@ -495,7 +495,7 @@ func _IAMService_UpdateGroup_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _IAMService_GetGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
+	in := new(GetGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -507,7 +507,7 @@ func _IAMService_GetGroup_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: IAMService_GetGroup_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMServiceServer).GetGroup(ctx, req.(*GetRequest))
+		return srv.(IAMServiceServer).GetGroup(ctx, req.(*GetGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

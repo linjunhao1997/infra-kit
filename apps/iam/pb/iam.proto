@@ -57,6 +57,13 @@ message Group {
   string name = 3;
   google.protobuf.Timestamp ctime = 4;
   google.protobuf.Timestamp mtime = 5;
+  repeated string authorityIds = 6;
+}
+
+message GetGroupRequest {
+  string org_code = 1;
+  string id = 2;
+  bool withAuthorityIds = 3;
 }
 
 message CreateGroupRequest {
@@ -223,13 +230,13 @@ service IAMService {
       };
     };
 
-    rpc GetGroup ( GetRequest ) returns ( Group ){
+    rpc GetGroup ( GetGroupRequest ) returns ( Group ){
       option (google.api.http) = {
         get: "/apis/v1/services/iam/groups/{id}"
       };
     };
 
-    rpc ListGroup( ListGroupRequest ) returns ( ListGr ){
+    rpc ListGroup( ListGroupRequest ) returns ( ListGroupResponse ){
       option (google.api.http) = {
         get: "/apis/v1/services/iam/groups"
       };

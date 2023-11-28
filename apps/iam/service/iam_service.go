@@ -89,7 +89,7 @@ type IAMService interface {
 	CreateOrg(ctx context.Context, code, name string) (*ent.Org, error)
 	CreateNamespace(ctx context.Context, param CreateNamespaceParam) (*ent.Namespace, error)
 	GetAuthority(ctx context.Context, authorityId string, isOrgCode bool) (*ent.Authority, error)
-	GetGroup(ctx context.Context, groupId string) (*ent.Group, error)
+	GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error)
 	GetOrg(ctx context.Context, orgId string) (*ent.Org, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
@@ -104,8 +104,12 @@ type iamService struct {
 	cache *redislib.Redis
 }
 
-func (s *iamService) GetGroup(ctx context.Context, groupId string) (*ent.Group, error) {
-	return s.db.Group.Query().Where(group.ID(groupId)).Only(ctx)
+func (s *iamService) GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error) {
+	q := s.db.Group.Query().Where(group.ID(groupId))
+	if withAuthorityIds {
+		q.WithAuthorities()
+	}
+	return q.Only(ctx)
 }
 
 func (s *iamService) ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error) {
@@ -145,14 +149,16 @@ func (s *iamService) ListGroup(ctx context.Context, pageSize int, pageToken *str
 // ListAuthority implements IAMService.
 func (s *iamService) ListAuthority(ctx context.Context, pageSize int, pageToken, groupId *string, isOrgCode bool) (*ListResult, error) {
 	res := newListResult(pageSize, ent.Authorities{})
-	listQuery := s.db.Authority.Query().
+	listQuery := s.db.Debug().Authority.Query().
 		Order(ent.Desc(user.FieldID)).
 		Limit(res.PageSize + 1)
 	if isOrgCode {
 		listQuery.Where(authority.CodeContains("{org_code}"))
 	}
 	if groupId != nil {
-		listQuery.Where(authority.HasGroupsWith(group.ID(*groupId)))
+		if *groupId != "" {
+			listQuery.Where(authority.HasGroupsWith(group.ID(*groupId)))
+		}
 	}
 	total, err := listQuery.Count(ctx)
 	if err != nil {
