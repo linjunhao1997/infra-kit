@@ -93,6 +93,8 @@ type IAMService interface {
 	GetOrg(ctx context.Context, orgId string) (*ent.Org, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
+	ListNamespace(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
+	ListOrg(ctx context.Context, pageSize int, pageToken *string) (*ListResult, error)
 	ListUser(ctx context.Context, pageSize int, pageToken *string, orgId, groupId, nsId *string) (*ListResult, error)
 	UpdateGroup(ctx context.Context, groupId string, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error)
 }
@@ -102,6 +104,74 @@ var _ IAMService = (*iamService)(nil)
 type iamService struct {
 	db    *ent.Client
 	cache *redislib.Redis
+}
+
+// ListNamespace implements IAMService.
+func (s *iamService) ListNamespace(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error) {
+	res := newListResult(pageSize, ent.Users{})
+	listQuery := s.db.Namespace.Query().
+		Order(ent.Desc(namespace.FieldID)).
+		Limit(res.PageSize + 1)
+	if orgId != nil {
+		listQuery.Where(namespace.HasOrgWith(org.ID(*orgId)))
+	}
+	total, err := listQuery.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res.SetItemsTotal(total)
+
+	if pageToken != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*pageToken)
+		if err != nil {
+			return nil, errInvalidPageToken
+		}
+		pageToken := string(bytes)
+		listQuery = listQuery.
+			Where(namespace.IDLTE(pageToken))
+	}
+
+	items, err := listQuery.All(ctx)
+	if len(items) == res.PageSize+1 {
+		res.NextPageToken = base64.StdEncoding.EncodeToString(
+			[]byte(fmt.Sprintf("%v", items[len(items)-1].ID)))
+		items = items[:len(items)-1]
+	}
+	res.SetItems(items)
+	return res, err
+}
+
+// ListOrg implements IAMService.
+func (s *iamService) ListOrg(ctx context.Context, pageSize int, pageToken *string) (*ListResult, error) {
+	res := newListResult(pageSize, ent.Orgs{})
+	listQuery := s.db.Org.Query().
+		Order(ent.Desc(org.FieldID)).
+		Limit(res.PageSize + 1)
+
+	total, err := listQuery.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	res.SetItemsTotal(total)
+
+	if pageToken != nil {
+		bytes, err := base64.StdEncoding.DecodeString(*pageToken)
+		if err != nil {
+			return nil, errInvalidPageToken
+		}
+		pageToken := string(bytes)
+		listQuery = listQuery.
+			Where(org.IDLTE(pageToken))
+	}
+
+	items, err := listQuery.All(ctx)
+	if len(items) == res.PageSize+1 {
+		res.NextPageToken = base64.StdEncoding.EncodeToString(
+			[]byte(fmt.Sprintf("%v", items[len(items)-1].ID)))
+		items = items[:len(items)-1]
+	}
+	res.SetItems(items)
+	return res, err
 }
 
 func (s *iamService) GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error) {

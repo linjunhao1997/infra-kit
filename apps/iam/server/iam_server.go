@@ -254,6 +254,86 @@ func (s *IAMServiceServer) ListUser(ctx context.Context, request *pb.ListUserReq
 	}, nil
 }
 
+func (s *IAMServiceServer) ListNamespace(ctx context.Context, request *pb.ListNamespaceRequest) (*pb.ListNamespaceResponse, error) {
+	var (
+		org              *ent.Org
+		err              error
+		orgId, pageToken *string
+	)
+	if request.OrgCode != "" {
+		org, err = s.service.GetOrg(ctx, request.GetOrgCode())
+		if err != nil {
+			return nil, err
+		}
+		orgId = &org.ID
+	}
+	token := request.GetPageToken()
+	if token != "" {
+		pageToken = &token
+	}
+
+	res, err := s.service.ListNamespace(ctx, int(request.GetPageSize()), pageToken, orgId)
+	if err != nil {
+		return nil, err
+	}
+	resItems := res.Items.([]*ent.Namespace)
+	items := make([]*pb.Namespace, 0, len(resItems))
+	for _, v := range resItems {
+		items = append(items, &pb.Namespace{
+			Id:    v.ID,
+			Code:  v.Code,
+			Name:  v.Name,
+			Ctime: timestamppb.New(v.Ctime),
+			Mtime: timestamppb.New(v.Mtime),
+		})
+	}
+	return &pb.ListNamespaceResponse{
+		Pagination: &pb.Pagination{
+			PageSize:      uint32(res.PageSize),
+			PageTotal:     uint32(res.PageTotal),
+			ItemsTotal:    uint32(res.ItemsTotal),
+			NextPageToken: res.NextPageToken,
+		},
+		Items: items,
+	}, nil
+}
+
+func (s *IAMServiceServer) ListOrg(ctx context.Context, request *pb.ListOrgRequest) (*pb.ListOrgResponse, error) {
+	var (
+		err       error
+		pageToken *string
+	)
+	if request.GetPageToken() != "" {
+		token := request.GetPageToken()
+		pageToken = &token
+	}
+
+	res, err := s.service.ListOrg(ctx, int(request.GetPageSize()), pageToken)
+	if err != nil {
+		return nil, err
+	}
+	resItems := res.Items.([]*ent.Org)
+	items := make([]*pb.Org, 0, len(resItems))
+	for _, v := range resItems {
+		items = append(items, &pb.Org{
+			Id:    v.ID,
+			Name:  v.Name,
+			Code:  v.Code,
+			Ctime: timestamppb.New(v.Ctime),
+			Mtime: timestamppb.New(v.Mtime),
+		})
+	}
+	return &pb.ListOrgResponse{
+		Pagination: &pb.Pagination{
+			PageSize:      uint32(res.PageSize),
+			PageTotal:     uint32(res.PageTotal),
+			ItemsTotal:    uint32(res.ItemsTotal),
+			NextPageToken: res.NextPageToken,
+		},
+		Items: items,
+	}, nil
+}
+
 func (s *IAMServiceServer) UpdateGroup(ctx context.Context, request *pb.UpdateGroupRequest) (*pb.Group, error) {
 	res, err := s.service.UpdateGroup(ctx, request.Id, request.Name, request.AddUserIds, request.RemoveUserIds, request.AddAuthorityIds, request.RemoveAuthorityIds)
 	if err != nil {
