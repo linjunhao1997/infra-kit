@@ -68,7 +68,7 @@ message GetGroupRequest {
 
 message CreateGroupRequest {
     string org_code = 1;
-    string group_code = 2;
+    string code = 2;
     string name = 3;
 }
 message UpdateGroupRequest {

@@ -23,13 +23,25 @@ func (s *IAMServiceServer) Auth(ctx context.Context, req *pb.AuthRequest) (*pb.A
 		return nil, err
 	}
 
-	cookie := http.Cookie{
+	orgCode, _, err := s.service.CheckAuthStatus(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	orgCookie := http.Cookie{
+		Name:    "Org-Code",
+		Value:   orgCode,
+		Expires: expireTime,
+		Path:    "/",
+	}
+
+	accessTokenCookie := http.Cookie{
 		Name:    "Access-Token",
 		Value:   token,
 		Expires: expireTime,
 		Path:    "/",
 	}
-	grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", cookie.String()))
+	grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", accessTokenCookie.String()))
+	grpc.SetHeader(ctx, metadata.Pairs("Set-Cookie", orgCookie.String()))
 	grpc.SetHeader(ctx, metadata.Pairs(service.KeyAccessToken, token))
 	return &pb.AuthResponse{
 		Token:      token,
@@ -58,6 +70,47 @@ func (s *IAMServiceServer) CreateAuthority(ctx context.Context, request *pb.Crea
 		Id:    res.ID,
 		Code:  res.Code,
 		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) CreateGroup(ctx context.Context, request *pb.CreateGroupRequest) (*pb.Group, error) {
+	org, err := s.service.GetOrg(ctx, request.OrgCode)
+	if err != nil {
+		return nil, err
+	}
+	res, err := s.service.CreateGroup(ctx, org.ID, request.Code, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Group{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.User, error) {
+	org, err := s.service.GetOrg(ctx, request.OrgCode)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.service.CreateUser(ctx, service.CreateUserParam{
+		OrgId: org.ID,
+		Name:  request.Name,
+		Email: request.Email,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.User{
+		Id:    res.ID,
+		Name:  res.Name,
+		Email: res.Email,
 		Ctime: timestamppb.New(res.Ctime),
 		Mtime: timestamppb.New(res.Mtime),
 	}, nil

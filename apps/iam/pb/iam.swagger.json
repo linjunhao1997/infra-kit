@@ -1086,7 +1086,7 @@
         "orgCode": {
           "type": "string"
         },
-        "groupCode": {
+        "code": {
           "type": "string"
         },
         "name": {
