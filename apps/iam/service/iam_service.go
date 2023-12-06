@@ -83,14 +83,14 @@ type IAMService interface {
 	CheckAuthStatus(ctx context.Context, token string) (orgCode, userId string, err error)
 	ValidateAuthorities(ctx context.Context, userId string, authorityIds []string) (map[string]bool, error)
 	UpdateCredential(ctx context.Context, userId string, ak, sk *string) (*ent.Credential, error)
-	CreateGroup(ctx context.Context, orgId, code, name string) (*ent.Group, error)
+	CreateGroup(ctx context.Context, orgId, code, name, description string) (*ent.Group, error)
 	CreateAuthority(ctx context.Context, code, name string) (*ent.Authority, error)
 	CreateUser(ctx context.Context, param CreateUserParam) (*ent.User, error)
 	CreateOrg(ctx context.Context, code, name string) (*ent.Org, error)
 	CreateNamespace(ctx context.Context, param CreateNamespaceParam) (*ent.Namespace, error)
 	GetAuthority(ctx context.Context, authorityId string, isOrgCode bool) (*ent.Authority, error)
 	GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error)
-	GetOrg(ctx context.Context, orgId string) (*ent.Org, error)
+	GetOrg(ctx context.Context, code string) (*ent.Org, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
 	ListNamespace(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
@@ -263,8 +263,8 @@ func (s *iamService) GetAuthority(ctx context.Context, authorityId string, isOrg
 	return q.Where(authority.ID(authorityId)).Only(ctx)
 }
 
-func (s *iamService) GetOrg(ctx context.Context, orgId string) (*ent.Org, error) {
-	return s.db.Org.Query().Where(org.ID(orgId)).Only(ctx)
+func (s *iamService) GetOrg(ctx context.Context, code string) (*ent.Org, error) {
+	return s.db.Org.Query().Where(org.Code(code)).Only(ctx)
 }
 
 func (s *iamService) UpdateGroup(ctx context.Context, groupId string, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error) {
@@ -360,14 +360,16 @@ func (s *iamService) UpdateCredential(ctx context.Context, userId string, ak, sk
 }
 
 // CreateGroup implements AuthService.
-func (s *iamService) CreateGroup(ctx context.Context, orgId, code, name string) (*ent.Group, error) {
+func (s *iamService) CreateGroup(ctx context.Context, orgId, code, name, description string) (*ent.Group, error) {
 	now := time.Now()
 	res, err := s.db.Group.Create().
 		SetOrgID(orgId).
 		SetCode(code).
 		SetName(name).
+		SetDescription(description).
 		SetCtime(now).
 		SetMtime(now).
+		SetDeleted(false).
 		Save(ctx)
 	if err != nil {
 		return nil, err

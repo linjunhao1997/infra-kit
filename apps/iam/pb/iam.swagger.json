@@ -1091,6 +1091,9 @@
         },
         "name": {
           "type": "string"
+        },
+        "description": {
+          "type": "string"
         }
       }
     },
@@ -1143,6 +1146,9 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "description": {
           "type": "string"
         },
         "ctime": {

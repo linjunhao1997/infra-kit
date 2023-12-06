@@ -55,9 +55,10 @@ message Group {
   string id = 1;
   string code = 2;
   string name = 3;
-  google.protobuf.Timestamp ctime = 4;
-  google.protobuf.Timestamp mtime = 5;
-  repeated string authorityIds = 6;
+  string description = 4;
+  google.protobuf.Timestamp ctime = 5;
+  google.protobuf.Timestamp mtime = 6;
+  repeated string authorityIds = 7;
 }
 
 message GetGroupRequest {
@@ -70,6 +71,7 @@ message CreateGroupRequest {
     string org_code = 1;
     string code = 2;
     string name = 3;
+    string description = 4;
 }
 message UpdateGroupRequest {
     string org_code = 1;

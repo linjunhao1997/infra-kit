@@ -80,7 +80,7 @@ func (s *IAMServiceServer) CreateGroup(ctx context.Context, request *pb.CreateGr
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.service.CreateGroup(ctx, org.ID, request.Code, request.Name)
+	res, err := s.service.CreateGroup(ctx, org.ID, request.Code, request.Name, request.Description)
 	if err != nil {
 		return nil, err
 	}
