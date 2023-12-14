@@ -93,6 +93,42 @@ func (s *IAMServiceServer) CreateGroup(ctx context.Context, request *pb.CreateGr
 	}, nil
 }
 
+func (s *IAMServiceServer) CreateNamespace(ctx context.Context, request *pb.CreateNamespaceRequest) (*pb.Namespace, error) {
+	org, err := s.service.GetOrg(ctx, request.OrgCode)
+	if err != nil {
+		return nil, err
+	}
+	res, err := s.service.CreateNamespace(ctx, service.CreateNamespaceParam{
+		OrgId: org.ID,
+		Name:  request.Name,
+		Code:  request.Code,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Namespace{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) CreateOrg(ctx context.Context, request *pb.CreateOrgRequest) (*pb.Org, error) {
+	res, err := s.service.CreateOrg(ctx, request.Code, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Org{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
 func (s *IAMServiceServer) CreateUser(ctx context.Context, request *pb.CreateUserRequest) (*pb.User, error) {
 	org, err := s.service.GetOrg(ctx, request.OrgCode)
 	if err != nil {
@@ -168,6 +204,48 @@ func (s *IAMServiceServer) GetGroup(ctx context.Context, request *pb.GetGroupReq
 		Ctime:        timestamppb.New(res.Ctime),
 		Mtime:        timestamppb.New(res.Mtime),
 		AuthorityIds: authorityIds,
+	}, nil
+}
+
+func (s *IAMServiceServer) GetNamespace(ctx context.Context, request *pb.GetRequest) (*pb.Namespace, error) {
+	res, err := s.service.GetNamespace(ctx, request.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Namespace{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+
+}
+func (s *IAMServiceServer) GetOrg(ctx context.Context, request *pb.GetRequest) (*pb.Org, error) {
+	res, err := s.service.GetOrg(ctx, request.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Org{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) GetUser(ctx context.Context, request *pb.GetRequest) (*pb.User, error) {
+	res, err := s.service.GetUser(ctx, request.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.User{
+		Id:    res.ID,
+		Email: res.Email,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
 	}, nil
 }
 
@@ -387,14 +465,70 @@ func (s *IAMServiceServer) ListOrg(ctx context.Context, request *pb.ListOrgReque
 	}, nil
 }
 
+func (s *IAMServiceServer) UpdateAuthority(ctx context.Context, request *pb.UpdateAuthorityRequest) (*pb.Authority, error) {
+	res, err := s.service.UpdateAuthority(ctx, request.Id, request.Code, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Authority{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
 func (s *IAMServiceServer) UpdateGroup(ctx context.Context, request *pb.UpdateGroupRequest) (*pb.Group, error) {
-	res, err := s.service.UpdateGroup(ctx, request.Id, request.Name, request.AddUserIds, request.RemoveUserIds, request.AddAuthorityIds, request.RemoveAuthorityIds)
+	res, err := s.service.UpdateGroup(ctx, request.Id, &request.Code, request.Name, request.AddUserIds, request.RemoveUserIds, request.AddAuthorityIds, request.RemoveAuthorityIds)
 	if err != nil {
 		return nil, err
 	}
 	return &pb.Group{
 		Id:    res.ID,
 		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) UpdateNamespace(ctx context.Context, request *pb.UpdateNamespaceRequest) (*pb.Namespace, error) {
+	res, err := s.service.UpdateNamespace(ctx, request.Id, request.Code, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Namespace{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) UpdateOrg(ctx context.Context, request *pb.UpdateOrgRequest) (*pb.Org, error) {
+	res, err := s.service.UpdateOrg(ctx, request.Id, request.Code, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.Org{
+		Id:    res.ID,
+		Code:  res.Code,
+		Name:  res.Name,
+		Ctime: timestamppb.New(res.Ctime),
+		Mtime: timestamppb.New(res.Mtime),
+	}, nil
+}
+
+func (s *IAMServiceServer) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest) (*pb.User, error) {
+	res, err := s.service.UpdateUser(ctx, request.Id, request.Email, request.Name)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.User{
+		Id:    res.ID,
+		Email: res.Email,
 		Name:  res.Name,
 		Ctime: timestamppb.New(res.Ctime),
 		Mtime: timestamppb.New(res.Mtime),

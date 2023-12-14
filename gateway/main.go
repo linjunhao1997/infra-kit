@@ -6,6 +6,7 @@ import (
 	"infra-kit/apps/iam/pb"
 	gateway "infra-kit/gateway/option"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -25,12 +26,13 @@ var (
 )
 
 func main() {
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	mux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(gateway.IncommingHeaderMatcher),
 		runtime.WithOutgoingHeaderMatcher(gateway.OutgoingHeaderMatcher),
 		runtime.WithMetadata(gateway.WithMetadata),
 	)
-
+	logger.Info("gateway starting", slog.Group("hello", slog.String("1", "2")))
 	basicEndpoint := buildEndpoint(consulAddr, serviceNameBasic, consulTag)
 	fmt.Println(basicEndpoint)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
@@ -56,6 +58,7 @@ func main() {
 			log.Fatal(err)
 		}
 	}()
+
 	http.ListenAndServe(":"+port, mux)
 }
 

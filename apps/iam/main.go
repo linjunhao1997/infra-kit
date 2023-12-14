@@ -39,7 +39,7 @@ func main() {
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
-	rdb := ent.NewClient(ent.Driver(drv))
+	rdb := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {}))
 
 	defer rdb.Close()
 	if err := rdb.Schema.Create(context.Background()); err != nil {

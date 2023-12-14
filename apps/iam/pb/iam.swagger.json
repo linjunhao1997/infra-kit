@@ -192,6 +192,9 @@
             "schema": {
               "type": "object",
               "properties": {
+                "code": {
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 }
@@ -455,6 +458,9 @@
                 "orgCode": {
                   "type": "string"
                 },
+                "code": {
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 },
@@ -630,6 +636,9 @@
               "type": "object",
               "properties": {
                 "orgCode": {
+                  "type": "string"
+                },
+                "code": {
                   "type": "string"
                 },
                 "name": {
@@ -831,6 +840,9 @@
             "schema": {
               "type": "object",
               "properties": {
+                "code": {
+                  "type": "string"
+                },
                 "name": {
                   "type": "string"
                 }
@@ -997,6 +1009,9 @@
                   "type": "string"
                 },
                 "name": {
+                  "type": "string"
+                },
+                "email": {
                   "type": "string"
                 }
               }

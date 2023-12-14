@@ -76,11 +76,12 @@ message CreateGroupRequest {
 message UpdateGroupRequest {
     string org_code = 1;
     string id = 2;
-    optional string name = 3;
-    repeated string add_user_ids = 4;
-    repeated string remove_user_ids = 5;
-    repeated string add_authority_ids = 6;
-    repeated string remove_authority_ids = 7;
+    string code = 3;
+    optional string name = 4;
+    repeated string add_user_ids = 5;
+    repeated string remove_user_ids = 6;
+    repeated string add_authority_ids = 7;
+    repeated string remove_authority_ids = 8;
 }
 message ListGroupRequest {
     google.protobuf.StringValue org_code = 1;
@@ -98,7 +99,9 @@ message CreateAuthorityRequest {
 }
 message UpdateAuthorityRequest {
   string id = 1;
-  optional string name = 2;
+  optional string code = 2;
+  optional string name = 3;
+
 }
 message Authority {
     string id = 1;
@@ -134,7 +137,8 @@ message CreateOrgRequest {
 }
 message UpdateOrgRequest {
   string id = 1;
-  optional string name = 2;
+  optional string code = 2;
+  optional string name = 3;
 }
 message ListOrgRequest {
   uint32 page_size = 1;
@@ -162,6 +166,7 @@ message UpdateUserRequest {
   string org_code = 1;
   string id = 2;
   optional string name = 3;
+  optional string email = 4;
 }
 message ListUserRequest {
   google.protobuf.StringValue org_code = 1;
@@ -194,7 +199,8 @@ message CreateNamespaceRequest {
 message UpdateNamespaceRequest {
   string org_code = 1;
   string id = 2;
-  optional string name = 3;
+  optional string code = 3;
+  optional string name = 4;
 }
 message ListNamespaceRequest {
   string org_code = 1;

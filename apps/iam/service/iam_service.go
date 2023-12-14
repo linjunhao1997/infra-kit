@@ -82,21 +82,28 @@ type IAMService interface {
 	Auth(ctx context.Context, email, pwd string) (token string, expireTime time.Time, err error)
 	CheckAuthStatus(ctx context.Context, token string) (orgCode, userId string, err error)
 	ValidateAuthorities(ctx context.Context, userId string, authorityIds []string) (map[string]bool, error)
-	UpdateCredential(ctx context.Context, userId string, ak, sk *string) (*ent.Credential, error)
-	CreateGroup(ctx context.Context, orgId, code, name, description string) (*ent.Group, error)
+
 	CreateAuthority(ctx context.Context, code, name string) (*ent.Authority, error)
-	CreateUser(ctx context.Context, param CreateUserParam) (*ent.User, error)
-	CreateOrg(ctx context.Context, code, name string) (*ent.Org, error)
+	CreateGroup(ctx context.Context, orgId, code, name, description string) (*ent.Group, error)
 	CreateNamespace(ctx context.Context, param CreateNamespaceParam) (*ent.Namespace, error)
+	CreateOrg(ctx context.Context, code, name string) (*ent.Org, error)
+	CreateUser(ctx context.Context, param CreateUserParam) (*ent.User, error)
 	GetAuthority(ctx context.Context, authorityId string, isOrgCode bool) (*ent.Authority, error)
 	GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error)
-	GetOrg(ctx context.Context, code string) (*ent.Org, error)
+	GetNamespace(ctx context.Context, id string) (*ent.Namespace, error)
+	GetOrg(ctx context.Context, id string) (*ent.Org, error)
+	GetUser(ctx context.Context, id string) (*ent.User, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
 	ListNamespace(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
 	ListOrg(ctx context.Context, pageSize int, pageToken *string) (*ListResult, error)
 	ListUser(ctx context.Context, pageSize int, pageToken *string, orgId, groupId, nsId *string) (*ListResult, error)
-	UpdateGroup(ctx context.Context, groupId string, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error)
+	UpdateCredential(ctx context.Context, userId string, ak, sk *string) (*ent.Credential, error)
+	UpdateAuthority(ctx context.Context, id string, code, name *string) (*ent.Authority, error)
+	UpdateGroup(ctx context.Context, groupId string, code, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error)
+	UpdateNamespace(ctx context.Context, id string, code, name *string) (*ent.Namespace, error)
+	UpdateOrg(ctx context.Context, id string, code, name *string) (*ent.Org, error)
+	UpdateUser(ctx context.Context, id string, email, name *string) (*ent.User, error)
 }
 
 var _ IAMService = (*iamService)(nil)
@@ -104,6 +111,85 @@ var _ IAMService = (*iamService)(nil)
 type iamService struct {
 	db    *ent.Client
 	cache *redislib.Redis
+}
+
+// GetUser implements IAMService.
+func (s *iamService) GetUser(ctx context.Context, id string) (*ent.User, error) {
+	return s.db.User.Query().Where(user.ID(id)).Only(ctx)
+}
+
+// UpdateAuthority implements IAMService.
+func (s *iamService) UpdateAuthority(ctx context.Context, id string, code *string, name *string) (*ent.Authority, error) {
+	m := s.db.Authority.UpdateOneID(id)
+	if code != nil {
+		m.SetCode(*code)
+	}
+	if name != nil {
+		m.SetName(*name)
+	}
+	m.SetMtime(time.Now())
+	res, err := m.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// UpdateNamespace implements IAMService.
+func (s *iamService) UpdateNamespace(ctx context.Context, id string, code *string, name *string) (*ent.Namespace, error) {
+	m := s.db.Namespace.UpdateOneID(id)
+	if code != nil {
+		m.SetCode(*code)
+	}
+	if name != nil {
+		m.SetName(*name)
+	}
+	m.SetMtime(time.Now())
+	res, err := m.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// UpdateOrg implements IAMService.
+func (s *iamService) UpdateOrg(ctx context.Context, id string, code *string, name *string) (*ent.Org, error) {
+	m := s.db.Org.UpdateOneID(id)
+	if code != nil {
+		m.SetCode(*code)
+	}
+	if name != nil {
+		m.SetName(*name)
+	}
+	m.SetMtime(time.Now())
+	res, err := m.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// UpdateUser implements IAMService.
+func (s *iamService) UpdateUser(ctx context.Context, id string, email *string, name *string) (*ent.User, error) {
+	m := s.db.User.UpdateOneID(id)
+	if email != nil {
+		m.SetEmail(*email)
+	}
+	if name != nil {
+		m.SetName(*name)
+	}
+	m.SetMtime(time.Now())
+	res, err := m.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// GetNamespace implements IAMService.
+func (s *iamService) GetNamespace(ctx context.Context, id string) (*ent.Namespace, error) {
+	q := s.db.Namespace.Query().Where(namespace.ID(id))
+	return q.Only(ctx)
 }
 
 // ListNamespace implements IAMService.
@@ -263,12 +349,15 @@ func (s *iamService) GetAuthority(ctx context.Context, authorityId string, isOrg
 	return q.Where(authority.ID(authorityId)).Only(ctx)
 }
 
-func (s *iamService) GetOrg(ctx context.Context, code string) (*ent.Org, error) {
-	return s.db.Org.Query().Where(org.Code(code)).Only(ctx)
+func (s *iamService) GetOrg(ctx context.Context, id string) (*ent.Org, error) {
+	return s.db.Org.Query().Where(org.ID(id)).Only(ctx)
 }
 
-func (s *iamService) UpdateGroup(ctx context.Context, groupId string, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error) {
+func (s *iamService) UpdateGroup(ctx context.Context, groupId string, code, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error) {
 	m := s.db.Group.UpdateOneID(groupId)
+	if code != nil {
+		m.SetCode(*code)
+	}
 	if name != nil {
 		m.SetName(*name)
 	}
@@ -552,6 +641,7 @@ func (s *iamService) CreateOrg(ctx context.Context, code, name string) (*ent.Org
 		SetName(name).
 		SetCtime(now).
 		SetMtime(now).
+		SetDeleted(false).
 		Save(ctx)
 	if err != nil {
 		return nil, err
