@@ -56,7 +56,6 @@ func UnaryClientAuthInterceptor(client pb.IAMServiceClient) grpc.UnaryClientInte
 					return status.Error(codes.InvalidArgument, errOrgCodeIsInvalid.Error())
 				}
 			}
-
 		}
 		urlMethod := md[metadata_grpc_gateway_http_method][0]
 		path, _ := runtime.HTTPPathPattern(ctx)
