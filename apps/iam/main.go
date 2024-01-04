@@ -32,7 +32,7 @@ var (
 )
 
 func main() {
-	loglib.Init()
+	loglib.Init(func(c *loglib.Config) { c.FilePath = "./logs/app.log" })
 	drv, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)

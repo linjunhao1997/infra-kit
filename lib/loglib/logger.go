@@ -4,7 +4,8 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"path/filepath"
+
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 type Config struct {
@@ -19,6 +20,7 @@ func Init(opts ...Option) {
 	for _, f := range opts {
 		f(&config)
 	}
+
 	var err error
 	var logger *slog.Logger
 	defer func() {
@@ -29,17 +31,9 @@ func Init(opts ...Option) {
 		slog.SetDefault(logger)
 	}()
 	if len(config.FilePath) > 0 {
-		err = os.MkdirAll(filepath.Dir(config.FilePath), 0666)
-		if err != nil {
-			return
-		}
+		r := &lumberjack.Logger{Filename: config.FilePath, LocalTime: true, MaxSize: 1, MaxAge: 3, MaxBackups: 5, Compress: true}
 
-		file, err := os.Create(config.FilePath)
-		if err != nil {
-			return
-		}
-		defer file.Close()
-		logger = slog.New(slog.NewJSONHandler(file, &slog.HandlerOptions{Level: caseLevel(config.Level)}))
+		logger = slog.New(slog.NewJSONHandler(r, &slog.HandlerOptions{Level: caseLevel(config.Level)}))
 	} else {
 		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: caseLevel(config.Level)}))
 	}
