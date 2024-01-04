@@ -7,8 +7,10 @@ import (
 	"infra-kit/apps/iam/server"
 	"infra-kit/apps/iam/service"
 	"infra-kit/lib/consullib"
+	"infra-kit/lib/loglib"
 	"infra-kit/lib/redislib"
 	"log"
+	"log/slog"
 	"net"
 	"os"
 	"time"
@@ -30,6 +32,7 @@ var (
 )
 
 func main() {
+	loglib.Init()
 	drv, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +46,7 @@ func main() {
 
 	defer rdb.Close()
 	if err := rdb.Schema.Create(context.Background()); err != nil {
-		log.Fatalf("failed creating schema resources: %v", err)
+		slog.Error("failed create db schema", "err", err)
 	}
 
 	cache, err := redislib.NewRedis(&redislib.RedisConf{
@@ -51,7 +54,7 @@ func main() {
 		Passwd: redisPasswd,
 	})
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed connect redis", "err", err)
 	}
 
 	var opts = []grpc.ServerOption{
@@ -72,7 +75,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Listen for traffic indefinitely.
+	slog.Info("grpc server listening", "port", port)
 	if err := gsv.Serve(lis); err != nil {
 		log.Fatalf("server ended: %s", err)
 	}

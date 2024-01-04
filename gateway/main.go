@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"infra-kit/apps/iam/pb"
 	gateway "infra-kit/gateway/option"
+	"infra-kit/lib/loglib"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,17 +23,17 @@ var (
 	consulTag        = os.Getenv("consul_tag")
 	port             = os.Getenv("port")
 	serviceNameBasic = os.Getenv("service_name_basic")
-	logger           = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 )
 
 func main() {
+	loglib.Init()
 	mux := runtime.NewServeMux(
 		runtime.WithIncomingHeaderMatcher(gateway.IncommingHeaderMatcher),
 		runtime.WithOutgoingHeaderMatcher(gateway.OutgoingHeaderMatcher),
 		runtime.WithMetadata(gateway.WithMetadata),
 	)
 	iamEndpoint := buildEndpoint(consulAddr, serviceNameBasic, consulTag)
-	logger.Info("build iam endpoint", "endpoint", iamEndpoint)
+	slog.Info("build iam endpoint", "endpoint", iamEndpoint)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, iamEndpoint,
@@ -41,7 +42,7 @@ func main() {
 	)
 	authClient := pb.NewIAMServiceClient(conn)
 	if err != nil {
-		logger.Error("new iam service client", "error", err)
+		slog.Error("new iam service client", "error", err)
 		return
 	}
 
@@ -51,10 +52,10 @@ func main() {
 		grpc.WithChainStreamInterceptor(gateway.StreamClientAuthInterceptor(authClient))}
 
 	if err := pb.RegisterIAMServiceHandlerFromEndpoint(ctx, mux, iamEndpoint, dialOptions); err != nil {
-		logger.Error("register iam service handler from endpoint", "error", err)
+		slog.Error("register iam service handler from endpoint", "error", err)
 	}
 
-	logger.Info("grpc server listening", "port", port)
+	slog.Info("http gateway server listening", "port", port)
 	http.ListenAndServe(":"+port, mux)
 }
 

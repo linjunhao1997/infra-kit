@@ -480,7 +480,7 @@ func (s *iamService) Auth(ctx context.Context, email, pwd string) (token string,
 	q.Where(user.Email(email))
 
 	q.WithOrg().Only(ctx)
-	account, err := q.WithOrg().Only(ctx)
+	account, err := q.WithOrg().WithCredential().Only(ctx)
 	if ent.IsNotFound(err) {
 		return "", time.Time{}, errors.Wrap(err, "user is not found")
 	} else if err != nil {
