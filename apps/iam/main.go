@@ -96,8 +96,10 @@ func main() {
 		gsv.Stop()
 	})
 
+	//TODO env or config 8081
 	httpSrv := metriclib.InitMetricsHttpServer(":8081")
 	g.Add(func() error {
+		slog.Info("metric http server listening", "port", "8081")
 		return httpSrv.ListenAndServe()
 	}, func(err error) {
 		if err := httpSrv.Close(); err != nil {
