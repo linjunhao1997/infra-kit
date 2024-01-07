@@ -1,4 +1,4 @@
-package server
+package grpclib
 
 import (
 	"runtime/debug"

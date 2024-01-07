@@ -7,13 +7,18 @@ import (
 	"infra-kit/apps/iam/server"
 	"infra-kit/apps/iam/service"
 	"infra-kit/lib/consullib"
+	"infra-kit/lib/grpclib"
 	"infra-kit/lib/loglib"
+	"infra-kit/lib/metriclib"
 	"infra-kit/lib/redislib"
+	"infra-kit/lib/tracelib"
 	"log"
 	"log/slog"
 	"net"
 	"os"
 	"time"
+
+	"github.com/oklog/run"
 
 	"entgo.io/ent/dialect/sql"
 	_ "github.com/go-sql-driver/mysql"
@@ -32,7 +37,12 @@ var (
 )
 
 func main() {
-	loglib.Init(func(c *loglib.Config) { c.FilePath = "./logs/app.log" })
+	loglib.Init()
+	err := tracelib.Init("iam-service")
+	if err != nil {
+		slog.Error("tracelib Init failed", "err", err)
+		return
+	}
 	drv, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -58,7 +68,9 @@ func main() {
 	}
 
 	var opts = []grpc.ServerOption{
-		grpc.ChainUnaryInterceptor(server.RecoveryUnaryServerInterceptor),
+		grpc.ChainUnaryInterceptor(grpclib.LoggingUnaryServerInterceptor, grpclib.MetricUnaryServerInterceptor, grpclib.RecoveryUnaryServerInterceptor),
+		grpc.ChainStreamInterceptor(grpclib.LoggingStreamServerInterceptor, grpclib.MetricStreamServerInterceptor, grpclib.RecoveryStreamServerInterceptor),
+		grpc.StatsHandler(grpclib.StatsServerHandler),
 	}
 	gsv := grpc.NewServer(opts...)
 	pb.RegisterIAMServiceServer(gsv, server.NewIAMServiceServer(service.NewIAMService(rdb, cache)))
@@ -75,8 +87,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	slog.Info("grpc server listening", "port", port)
-	if err := gsv.Serve(lis); err != nil {
-		log.Fatalf("server ended: %s", err)
+	g := &run.Group{}
+	g.Add(func() error {
+		slog.Info("grpc server listening", "port", port)
+		return gsv.Serve(lis)
+	}, func(err error) {
+		gsv.GracefulStop()
+		gsv.Stop()
+	})
+
+	httpSrv := metriclib.InitMetricsHttpServer(":8081")
+	g.Add(func() error {
+		return httpSrv.ListenAndServe()
+	}, func(err error) {
+		if err := httpSrv.Close(); err != nil {
+			slog.Error("failed to stop web server", "err", err)
+		}
+	})
+
+	if err := g.Run(); err != nil {
+		slog.Error("server ended", "err", err)
+		os.Exit(1)
 	}
 }
