@@ -21,12 +21,7 @@ func InitMetricsHttpServer(addr string) *http.Server {
 	reg.MustRegister(srvMetrics)
 	httpSrv := &http.Server{Addr: addr}
 	m := http.NewServeMux()
-	m.Handle("/metrics", promhttp.HandlerFor(
-		reg,
-		promhttp.HandlerOpts{
-			EnableOpenMetrics: true,
-		},
-	))
+	m.Handle("/metrics", DefaultMetricsHttpHandler())
 	httpSrv.Handler = m
 	return httpSrv
 }
