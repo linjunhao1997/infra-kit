@@ -10,6 +10,7 @@ import (
 	"infra-kit/lib/grpclib"
 	"infra-kit/lib/loglib"
 	"infra-kit/lib/metriclib"
+	"infra-kit/lib/pproflib"
 	"infra-kit/lib/redislib"
 	"infra-kit/lib/tracelib"
 	"log"
@@ -52,7 +53,7 @@ func main() {
 	db.SetMaxIdleConns(10)
 	db.SetMaxOpenConns(100)
 	db.SetConnMaxLifetime(time.Hour)
-	rdb := ent.NewClient(ent.Driver(drv), ent.Log(func(a ...any) {}))
+	rdb := ent.NewClient(ent.Driver(drv))
 
 	defer rdb.Close()
 	if err := rdb.Schema.Create(context.Background()); err != nil {
@@ -102,9 +103,17 @@ func main() {
 		slog.Info("metric http server listening", "port", "9091")
 		return httpSrv.ListenAndServe()
 	}, func(err error) {
+		slog.Error("http metric http server stoped", "err", err)
 		if err := httpSrv.Close(); err != nil {
 			slog.Error("failed to stop web server", "err", err)
 		}
+	})
+
+	g.Add(func() error {
+		slog.Info("pprofile starting")
+		return pproflib.StartProfile("./profile")
+	}, func(err error) {
+		slog.Error("pprofile stoped", "err", err)
 	})
 
 	if err := g.Run(); err != nil {

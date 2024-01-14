@@ -21,7 +21,8 @@ func AsyncRunConsumerGroup(brokers []string, topic, group string, consumeFunc fu
 		for {
 			gen, err := consumerGroup.Next(context.TODO())
 			if err != nil {
-				panic(err)
+				// retry
+				return
 			}
 			assignments := gen.Assignments[topic]
 			for range assignments {

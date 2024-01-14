@@ -12,7 +12,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	_ "github.com/mbobakov/grpc-consul-resolver" // It's important
@@ -42,12 +41,15 @@ func main() {
 	)
 	iamEndpoint := buildEndpoint(consulAddr, serviceNameBasic, consulTag)
 	slog.Info("build iam endpoint", "endpoint", iamEndpoint)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
-	defer cancel()
-	conn, err := grpc.DialContext(ctx, iamEndpoint,
+	conn, err := grpc.DialContext(context.Background(), iamEndpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
 	)
+	if err != nil {
+		slog.Error("dial iam failed", "error", err)
+		return
+	}
+	defer conn.Close()
 	authClient := pb.NewIAMServiceClient(conn)
 	if err != nil {
 		slog.Error("new iam service client", "error", err)
@@ -61,7 +63,7 @@ func main() {
 		grpc.WithStatsHandler(grpclib.StatsClientHandler),
 	}
 
-	if err := pb.RegisterIAMServiceHandlerFromEndpoint(ctx, mux, iamEndpoint, dialOptions); err != nil {
+	if err := pb.RegisterIAMServiceHandlerFromEndpoint(context.Background(), mux, iamEndpoint, dialOptions); err != nil {
 		slog.Error("register iam service handler from endpoint", "error", err)
 	}
 
@@ -71,7 +73,7 @@ func main() {
 }
 
 func buildEndpoint(consulAddr, endpoint, tag string) string {
-	return fmt.Sprintf("consul://%s/%s?wait=14s&tag=%s", consulAddr, endpoint, tag)
+	return fmt.Sprintf("consul://%s/%s?tag=%s", consulAddr, endpoint, tag)
 }
 
 func MetricHandler(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
