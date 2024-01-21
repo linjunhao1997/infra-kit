@@ -87,7 +87,7 @@ func checkAndDeleteExpiredFiles(dir string) error {
 
 		// 如果文件创建时间超过一小时，则删除文件
 		if now.Sub(createTime) > 1*time.Hour {
-			err := os.Remove(file.Name())
+			err := os.Remove(dir + "/" + file.Name())
 			if err != nil {
 				err = fmt.Errorf("Error deleting file, fiiename=%v, err=%v", file.Name(), err)
 				return err

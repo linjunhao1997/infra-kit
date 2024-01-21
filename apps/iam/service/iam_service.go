@@ -92,7 +92,7 @@ type IAMService interface {
 	GetGroup(ctx context.Context, groupId string, withAuthorityIds bool) (*ent.Group, error)
 	GetNamespace(ctx context.Context, id string) (*ent.Namespace, error)
 	GetOrg(ctx context.Context, id string) (*ent.Org, error)
-	GetUser(ctx context.Context, id string) (*ent.User, error)
+	GetUser(ctx context.Context, id string, withGroupIds bool) (*ent.User, error)
 	ListAuthority(ctx context.Context, pageSize int, pageToken *string, groupId *string, isOrgCode bool) (*ListResult, error)
 	ListGroup(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
 	ListNamespace(ctx context.Context, pageSize int, pageToken *string, orgId *string) (*ListResult, error)
@@ -103,7 +103,7 @@ type IAMService interface {
 	UpdateGroup(ctx context.Context, groupId string, code, name *string, addUserIds, removeUserIds, addAuthorityIds, removeAuthorityIds []string) (*ent.Group, error)
 	UpdateNamespace(ctx context.Context, id string, code, name *string) (*ent.Namespace, error)
 	UpdateOrg(ctx context.Context, id string, code, name *string) (*ent.Org, error)
-	UpdateUser(ctx context.Context, id string, email, name *string) (*ent.User, error)
+	UpdateUser(ctx context.Context, id string, email, name *string, addGroupIds, removeGroupIds []string) (*ent.User, error)
 }
 
 var _ IAMService = (*iamService)(nil)
@@ -114,8 +114,12 @@ type iamService struct {
 }
 
 // GetUser implements IAMService.
-func (s *iamService) GetUser(ctx context.Context, id string) (*ent.User, error) {
-	return s.db.User.Query().Where(user.ID(id)).Only(ctx)
+func (s *iamService) GetUser(ctx context.Context, id string, withGroupIds bool) (*ent.User, error) {
+	query := s.db.User.Query().Where(user.ID(id))
+	if withGroupIds {
+		query.WithGroups(func(gq *ent.GroupQuery) { gq.Select(group.FieldID) })
+	}
+	return query.Only(ctx)
 }
 
 // UpdateAuthority implements IAMService.
@@ -170,13 +174,19 @@ func (s *iamService) UpdateOrg(ctx context.Context, id string, code *string, nam
 }
 
 // UpdateUser implements IAMService.
-func (s *iamService) UpdateUser(ctx context.Context, id string, email *string, name *string) (*ent.User, error) {
+func (s *iamService) UpdateUser(ctx context.Context, id string, email *string, name *string, addGroupIds, removeGroupIds []string) (*ent.User, error) {
 	m := s.db.User.UpdateOneID(id)
 	if email != nil {
 		m.SetEmail(*email)
 	}
 	if name != nil {
 		m.SetName(*name)
+	}
+	if len(addGroupIds) != 0 {
+		m.AddGroupIDs(addGroupIds...)
+	}
+	if len(removeGroupIds) != 0 {
+		m.RemoveGroupIDs(removeGroupIds...)
 	}
 	m.SetMtime(time.Now())
 	res, err := m.Save(ctx)
@@ -282,7 +292,7 @@ func (s *iamService) ListGroup(ctx context.Context, pageSize int, pageToken *str
 	}
 	res.SetItemsTotal(total)
 
-	if pageToken != nil {
+	if pageToken != nil && len(*pageToken) > 0 {
 		bytes, err := base64.StdEncoding.DecodeString(*pageToken)
 		if err != nil {
 			return nil, errInvalidPageToken

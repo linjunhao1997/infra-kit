@@ -798,7 +798,7 @@ var (
 )
 
 func request_IAMService_GetUser_0(ctx context.Context, marshaler runtime.Marshaler, client IAMServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetRequest
+	var protoReq GetUserRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -831,7 +831,7 @@ func request_IAMService_GetUser_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 func local_request_IAMService_GetUser_0(ctx context.Context, marshaler runtime.Marshaler, server IAMServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetRequest
+	var protoReq GetUserRequest
 	var metadata runtime.ServerMetadata
 
 	var (

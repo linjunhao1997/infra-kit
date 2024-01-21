@@ -64,7 +64,7 @@ type IAMServiceClient interface {
 	GetOrg(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*Org, error)
 	ListOrg(ctx context.Context, in *ListOrgRequest, opts ...grpc.CallOption) (*ListOrgResponse, error)
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*User, error)
-	GetUser(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error)
+	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*User, error)
 	ListUser(ctx context.Context, in *ListUserRequest, opts ...grpc.CallOption) (*ListUserResponse, error)
 	CreateNamespace(ctx context.Context, in *CreateNamespaceRequest, opts ...grpc.CallOption) (*Namespace, error)
@@ -225,7 +225,7 @@ func (c *iAMServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest
 	return out, nil
 }
 
-func (c *iAMServiceClient) GetUser(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*User, error) {
+func (c *iAMServiceClient) GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error) {
 	out := new(User)
 	err := c.cc.Invoke(ctx, IAMService_GetUser_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -308,7 +308,7 @@ type IAMServiceServer interface {
 	GetOrg(context.Context, *GetRequest) (*Org, error)
 	ListOrg(context.Context, *ListOrgRequest) (*ListOrgResponse, error)
 	CreateUser(context.Context, *CreateUserRequest) (*User, error)
-	GetUser(context.Context, *GetRequest) (*User, error)
+	GetUser(context.Context, *GetUserRequest) (*User, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
 	ListUser(context.Context, *ListUserRequest) (*ListUserResponse, error)
 	CreateNamespace(context.Context, *CreateNamespaceRequest) (*Namespace, error)
@@ -370,7 +370,7 @@ func (UnimplementedIAMServiceServer) ListOrg(context.Context, *ListOrgRequest) (
 func (UnimplementedIAMServiceServer) CreateUser(context.Context, *CreateUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedIAMServiceServer) GetUser(context.Context, *GetRequest) (*User, error) {
+func (UnimplementedIAMServiceServer) GetUser(context.Context, *GetUserRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 func (UnimplementedIAMServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*User, error) {
@@ -693,7 +693,7 @@ func _IAMService_CreateUser_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 func _IAMService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
+	in := new(GetUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -705,7 +705,7 @@ func _IAMService_GetUser_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: IAMService_GetUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMServiceServer).GetUser(ctx, req.(*GetRequest))
+		return srv.(IAMServiceServer).GetUser(ctx, req.(*GetUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

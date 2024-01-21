@@ -965,10 +965,10 @@
             "type": "string"
           },
           {
-            "name": "orgCode",
+            "name": "withGroupIds",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -1013,6 +1013,18 @@
                 },
                 "email": {
                   "type": "string"
+                },
+                "addGroupIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "removeGroupIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
                 }
               }
             }
@@ -1340,6 +1352,12 @@
         "mtime": {
           "type": "string",
           "format": "date-time"
+        },
+        "groupIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

@@ -64,7 +64,7 @@ message Group {
 message GetGroupRequest {
   string org_code = 1;
   string id = 2;
-  bool withAuthorityIds = 3;
+  bool with_authority_ids = 3;
 }
 
 message CreateGroupRequest {
@@ -76,7 +76,7 @@ message CreateGroupRequest {
 message UpdateGroupRequest {
     string org_code = 1;
     string id = 2;
-    string code = 3;
+    optional string code = 3;
     optional string name = 4;
     repeated string add_user_ids = 5;
     repeated string remove_user_ids = 6;
@@ -155,6 +155,12 @@ message User {
   string email = 3;
   google.protobuf.Timestamp ctime = 4;
   google.protobuf.Timestamp mtime = 5;
+  repeated string groupIds = 6;
+}
+
+message GetUserRequest {
+    string id = 1;
+    bool with_group_ids = 2;
 }
 
 message CreateUserRequest {
@@ -167,7 +173,10 @@ message UpdateUserRequest {
   string id = 2;
   optional string name = 3;
   optional string email = 4;
+  repeated string add_group_ids = 5;
+  repeated string remove_group_ids = 6;
 }
+
 message ListUserRequest {
   google.protobuf.StringValue org_code = 1;
   oneof model {
@@ -312,7 +321,7 @@ service IAMService {
       };
     };
 
-    rpc GetUser ( GetRequest ) returns ( User ){
+    rpc GetUser ( GetUserRequest ) returns ( User ){
       option (google.api.http) = {
         get: "/apis/v1/services/iam/users/{id}"
       };

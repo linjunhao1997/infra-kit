@@ -235,17 +235,22 @@ func (s *IAMServiceServer) GetOrg(ctx context.Context, request *pb.GetRequest) (
 	}, nil
 }
 
-func (s *IAMServiceServer) GetUser(ctx context.Context, request *pb.GetRequest) (*pb.User, error) {
-	res, err := s.service.GetUser(ctx, request.Id)
+func (s *IAMServiceServer) GetUser(ctx context.Context, request *pb.GetUserRequest) (*pb.User, error) {
+	res, err := s.service.GetUser(ctx, request.Id, request.WithGroupIds)
 	if err != nil {
 		return nil, err
 	}
+	groupIds := make([]string, 0, len(res.Edges.Groups))
+	for _, g := range res.Edges.Groups {
+		groupIds = append(groupIds, g.ID)
+	}
 	return &pb.User{
-		Id:    res.ID,
-		Email: res.Email,
-		Name:  res.Name,
-		Ctime: timestamppb.New(res.Ctime),
-		Mtime: timestamppb.New(res.Mtime),
+		Id:       res.ID,
+		Email:    res.Email,
+		Name:     res.Name,
+		Ctime:    timestamppb.New(res.Ctime),
+		Mtime:    timestamppb.New(res.Mtime),
+		GroupIds: groupIds,
 	}, nil
 }
 
@@ -480,7 +485,7 @@ func (s *IAMServiceServer) UpdateAuthority(ctx context.Context, request *pb.Upda
 }
 
 func (s *IAMServiceServer) UpdateGroup(ctx context.Context, request *pb.UpdateGroupRequest) (*pb.Group, error) {
-	res, err := s.service.UpdateGroup(ctx, request.Id, &request.Code, request.Name, request.AddUserIds, request.RemoveUserIds, request.AddAuthorityIds, request.RemoveAuthorityIds)
+	res, err := s.service.UpdateGroup(ctx, request.Id, request.Code, request.Name, request.AddUserIds, request.RemoveUserIds, request.AddAuthorityIds, request.RemoveAuthorityIds)
 	if err != nil {
 		return nil, err
 	}
@@ -522,7 +527,7 @@ func (s *IAMServiceServer) UpdateOrg(ctx context.Context, request *pb.UpdateOrgR
 }
 
 func (s *IAMServiceServer) UpdateUser(ctx context.Context, request *pb.UpdateUserRequest) (*pb.User, error) {
-	res, err := s.service.UpdateUser(ctx, request.Id, request.Email, request.Name)
+	res, err := s.service.UpdateUser(ctx, request.Id, request.Email, request.Name, request.AddGroupIds, request.RemoveGroupIds)
 	if err != nil {
 		return nil, err
 	}
